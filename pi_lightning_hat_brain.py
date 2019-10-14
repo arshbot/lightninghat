@@ -68,7 +68,7 @@ def spin_fans(spin_time_per_payment):
     return
 
 def display_qr_code():
-    subprocess.call("fbi", "-a", get_current_qr_code_url())
+    subprocess.call(["fbi", "-a", get_current_qr_code_url()])
     return
 
 def handle_successful_payment(*args, **kwargs):
