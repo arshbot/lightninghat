@@ -41,9 +41,9 @@ def get_current_qr_code_url():
 
 def gen_qr_code_url():
     global current_index
-
-    name = save_dir + qrcode_name + str(current_index) + ".png"
+ 
     current_index += 1
+    name = save_dir + qrcode_name + str(current_index) + ".png"
     return name
 
 def gen_qr_code(payment_string):
@@ -68,7 +68,7 @@ def spin_fans(spin_time_per_payment):
     return
 
 def display_qr_code():
-    subprocess.call(["fbi", "-a", get_current_qr_code_url()])
+    subprocess.call(["sudo","fbi", "--noverbose", "-a", "-T", "1", get_current_qr_code_url()])
     return
 
 def handle_successful_payment(*args, **kwargs):
