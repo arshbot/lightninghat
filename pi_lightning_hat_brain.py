@@ -23,6 +23,7 @@ current_index = 0
 save_dir = '/tmp/'
 qrcode_name = 'lnhat'
 is_last_fan_A = True
+current_qr_code_url = None
 
 
 pusher = pysher.Pusher(
@@ -33,22 +34,21 @@ pusher = pysher.Pusher(
 )
 
 
-def get_current_qr_code_url():
-    global current_index
-
-    name = save_dir + qrcode_name + str(current_index) + ".png"
-    return name
-
 def gen_qr_code_url():
     global current_index
  
-    current_index += 1
     name = save_dir + qrcode_name + str(current_index) + ".png"
+    current_index += 1
+
     return name
 
 def gen_qr_code(payment_string):
+    global current_qr_code_url
+
     img = qrcode.make(payment_string)
-    img.save(gen_qr_code_url())
+    current_qr_code_url = gen_qr_code_url()
+
+    img.save(current_qr_code_url)
     return
 
 def spin_fans(spin_time_per_payment):
@@ -67,17 +67,12 @@ def spin_fans(spin_time_per_payment):
 
     return
 
-def display_qr_code():
-    subprocess.call(["sudo","fbi", "--noverbose", "-a", "-T", "1", get_current_qr_code_url()])
-    return
+def display_qr_code(killall=False):
+    global current_qr_code_url
 
-def handle_successful_payment(*args, **kwargs):
-    global is_last_fan_A
-
-    args = json.loads(args[0])
-    gen_qr_code(args['payment_string'])
-    display_qr_code()
-    spin_fans(5000)
+    if killall:
+        subprocess.call(["killall", "-9", "fbi"])
+    subprocess.call(["sudo","fbi", "--noverbose", "-a", "-T", "1", current_qr_code_url])
     return
 
 def get_first_payment_string():
@@ -85,11 +80,22 @@ def get_first_payment_string():
     payment_string = res.json()['payment_string']
     return payment_string
 
+def handle_successful_payment(*args, **kwargs):
+    spin_fans(5000)
+    return
+
+def handle_new_payment_string(*args, **kwargs):
+    args = json.loads(args[0])
+    gen_qr_code(args['payment_string'])
+    display_qr_code()
+    return
+
 def connect_handler(data):
     global pusher
 
     channel = pusher.subscribe('main')
     channel.bind('payment', handle_successful_payment)
+    channel.bind('payment-string', handle_new_payment_string)
 
 
 while True:
@@ -108,11 +114,8 @@ pusher.connection.bind('pusher:connection_established', connect_handler)
 pusher.connect()
 print("Successfully connected to pusher")
 
-print("DEBUG: Getting first payment string")
 payment_string = get_first_payment_string()
-print("Generating qr code")
 gen_qr_code(payment_string)
-print("Displaying qr code")
 display_qr_code()
 
 while True:
