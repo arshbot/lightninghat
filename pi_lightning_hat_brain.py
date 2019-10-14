@@ -6,6 +6,7 @@ import json
 import qrcode
 import serial
 import subprocess
+import requests
 
 root = logging.getLogger()
 root.setLevel(logging.INFO)
@@ -79,12 +80,16 @@ def handle_successful_payment(*args, **kwargs):
     spin_fans(5000)
     return
 
+def get_first_payment_string():
+    res = requests.get("https://lnhat.com/payment_string")
+    payment_string = res.json()['payment_string']
+    return payment_string
+
 def connect_handler(data):
     global pusher
 
     channel = pusher.subscribe('main')
     channel.bind('payment', handle_successful_payment)
-
 
 
 while True:
@@ -97,9 +102,18 @@ while True:
         print("Connecting to port failed: {}".format(e))
         continue
 
+    time.sleep(1)
+
 pusher.connection.bind('pusher:connection_established', connect_handler)
 pusher.connect()
 print("Successfully connected to pusher")
+
+print("DEBUG: Getting first payment string")
+payment_string = get_first_payment_string()
+print("Generating qr code")
+gen_qr_code(payment_string)
+print("Displaying qr code")
+display_qr_code()
 
 while True:
     time.sleep(1)
