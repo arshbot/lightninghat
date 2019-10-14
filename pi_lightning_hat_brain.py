@@ -25,7 +25,6 @@ qrcode_name = 'lnhat'
 is_last_fan_A = True
 current_qr_code_url = None
 
-
 pusher = pysher.Pusher(
     key=key,
     cluster=cluster,
@@ -87,7 +86,7 @@ def handle_successful_payment(*args, **kwargs):
 def handle_new_payment_string(*args, **kwargs):
     args = json.loads(args[0])
     gen_qr_code(args['payment_string'])
-    display_qr_code()
+    display_qr_code(True)
     return
 
 def connect_handler(data):
