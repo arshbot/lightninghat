@@ -75,7 +75,7 @@ def display_qr_code(killall=False):
     return
 
 def get_first_payment_string():
-    res = requests.get("https://lnhat.com/payment_string")
+    res = requests.get("http://lnhat.35.245.174.48.nip.io/payment_string")
     payment_string = res.json()['payment_string']
     return payment_string
 
